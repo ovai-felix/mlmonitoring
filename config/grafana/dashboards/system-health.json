@@ -1,0 +1,450 @@
+{
+  "dashboard": {
+    "title": "System Health",
+    "uid": "system-health",
+    "timezone": "UTC",
+    "refresh": "30s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "version": 1,
+    "panels": [
+      {
+        "id": 1,
+        "title": "Request Rate",
+        "type": "timeseries",
+        "gridPos": {
+          "x": 0,
+          "y": 0,
+          "w": 12,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "rate(http_requests_total[5m])",
+            "refId": "A",
+            "legendFormat": "{{status_code}}"
+          }
+        ],
+        "options": {
+          "tooltip": {
+            "mode": "multi"
+          },
+          "legend": {
+            "calcs": [
+              "mean",
+              "max"
+            ],
+            "displayMode": "table",
+            "placement": "bottom"
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "hideFrom": {
+                "tooltip": false,
+                "viz": false,
+                "legend": false
+              },
+              "lineWidth": 2,
+              "fillOpacity": 0
+            },
+            "unit": "reqps"
+          },
+          "overrides": []
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        }
+      },
+      {
+        "id": 2,
+        "title": "Latency p50/p95/p99",
+        "type": "timeseries",
+        "gridPos": {
+          "x": 12,
+          "y": 0,
+          "w": 12,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.5, rate(http_request_duration_seconds_bucket[5m]))",
+            "refId": "A",
+            "legendFormat": "p50"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))",
+            "refId": "B",
+            "legendFormat": "p95"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m]))",
+            "refId": "C",
+            "legendFormat": "p99"
+          }
+        ],
+        "options": {
+          "tooltip": {
+            "mode": "multi"
+          },
+          "legend": {
+            "calcs": [
+              "mean",
+              "max"
+            ],
+            "displayMode": "table",
+            "placement": "bottom"
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "hideFrom": {
+                "tooltip": false,
+                "viz": false,
+                "legend": false
+              },
+              "lineWidth": 2,
+              "fillOpacity": 0
+            },
+            "unit": "s"
+          },
+          "overrides": []
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        }
+      },
+      {
+        "id": 3,
+        "title": "Error Rate",
+        "type": "timeseries",
+        "gridPos": {
+          "x": 0,
+          "y": 8,
+          "w": 12,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{status_code=~\"5..\"}[5m]) / rate(http_requests_total[5m])",
+            "refId": "A",
+            "legendFormat": "Error Rate"
+          }
+        ],
+        "options": {
+          "tooltip": {
+            "mode": "multi"
+          },
+          "legend": {
+            "calcs": [
+              "mean",
+              "max"
+            ],
+            "displayMode": "list",
+            "placement": "bottom"
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "hideFrom": {
+                "tooltip": false,
+                "viz": false,
+                "legend": false
+              },
+              "lineWidth": 2,
+              "fillOpacity": 10
+            },
+            "unit": "percentunit",
+            "min": 0,
+            "max": 1,
+            "color": {
+              "mode": "palette-classic"
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "Error Rate"
+              },
+              "properties": [
+                {
+                  "id": "color",
+                  "value": {
+                    "mode": "fixed",
+                    "fixedColor": "red"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        }
+      },
+      {
+        "id": 4,
+        "title": "Requests In Progress",
+        "type": "gauge",
+        "gridPos": {
+          "x": 12,
+          "y": 8,
+          "w": 6,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "sum(http_requests_in_progress)",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "orientation": "auto",
+          "textMode": "auto",
+          "reduceOptions": {
+            "values": false,
+            "calcs": [
+              "lastNotNull"
+            ],
+            "fields": ""
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "hideFrom": {
+                "tooltip": false,
+                "viz": false,
+                "legend": false
+              }
+            },
+            "unit": "short",
+            "min": 0,
+            "max": 100
+          },
+          "overrides": []
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        }
+      },
+      {
+        "id": 5,
+        "title": "Model Version",
+        "type": "stat",
+        "gridPos": {
+          "x": 18,
+          "y": 8,
+          "w": 6,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "active_model_version",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "textMode": "auto",
+          "colorMode": "background",
+          "graphMode": "none",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "reduceOptions": {
+            "values": false,
+            "calcs": [
+              "lastNotNull"
+            ],
+            "fields": ""
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "hideFrom": {
+                "tooltip": false,
+                "viz": false,
+                "legend": false
+              }
+            },
+            "unit": "short",
+            "mappings": []
+          },
+          "overrides": []
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        }
+      },
+      {
+        "id": 6,
+        "title": "Model Load Duration",
+        "type": "timeseries",
+        "gridPos": {
+          "x": 0,
+          "y": 16,
+          "w": 12,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "model_load_duration_seconds",
+            "refId": "A",
+            "legendFormat": "{{model_type}}"
+          }
+        ],
+        "options": {
+          "tooltip": {
+            "mode": "multi"
+          },
+          "legend": {
+            "calcs": [
+              "mean",
+              "max"
+            ],
+            "displayMode": "table",
+            "placement": "bottom"
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "hideFrom": {
+                "tooltip": false,
+                "viz": false,
+                "legend": false
+              },
+              "lineWidth": 2,
+              "fillOpacity": 0
+            },
+            "unit": "s"
+          },
+          "overrides": []
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        }
+      },
+      {
+        "id": 7,
+        "title": "Ingestion Rate",
+        "type": "timeseries",
+        "gridPos": {
+          "x": 12,
+          "y": 16,
+          "w": 12,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "rate(records_ingested_total[5m])",
+            "refId": "A",
+            "legendFormat": "{{status}}"
+          }
+        ],
+        "options": {
+          "tooltip": {
+            "mode": "multi"
+          },
+          "legend": {
+            "calcs": [
+              "mean",
+              "max"
+            ],
+            "displayMode": "table",
+            "placement": "bottom"
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "hideFrom": {
+                "tooltip": false,
+                "viz": false,
+                "legend": false
+              },
+              "lineWidth": 2,
+              "fillOpacity": 0
+            },
+            "unit": "reqps"
+          },
+          "overrides": []
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        }
+      },
+      {
+        "id": 8,
+        "title": "Prediction Latency",
+        "type": "timeseries",
+        "gridPos": {
+          "x": 0,
+          "y": 24,
+          "w": 24,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(prediction_latency_seconds_bucket[5m]))",
+            "refId": "A",
+            "legendFormat": "p95 Prediction Latency"
+          }
+        ],
+        "options": {
+          "tooltip": {
+            "mode": "multi"
+          },
+          "legend": {
+            "calcs": [
+              "mean",
+              "max",
+              "min"
+            ],
+            "displayMode": "table",
+            "placement": "bottom"
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "hideFrom": {
+                "tooltip": false,
+                "viz": false,
+                "legend": false
+              },
+              "lineWidth": 2,
+              "fillOpacity": 0
+            },
+            "unit": "s"
+          },
+          "overrides": []
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        }
+      }
+    ],
+    "schemaVersion": 38,
+    "templating": {
+      "list": []
+    },
+    "style": "dark",
+    "links": []
+  },
+  "overwrite": true
+}

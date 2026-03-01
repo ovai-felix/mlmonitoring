@@ -1,0 +1,73 @@
+dataset:
+  name: credit_card_fraud
+  source: kaggle/mlg-ulb/creditcardfraud
+  description: >
+    Transactions made by European cardholders in September 2013.
+    284,807 transactions, 492 frauds (0.172%).
+    Features V1-V28 are PCA-transformed. Time and Amount are original.
+
+features:
+  pca_features:
+    - V1
+    - V2
+    - V3
+    - V4
+    - V5
+    - V6
+    - V7
+    - V8
+    - V9
+    - V10
+    - V11
+    - V12
+    - V13
+    - V14
+    - V15
+    - V16
+    - V17
+    - V18
+    - V19
+    - V20
+    - V21
+    - V22
+    - V23
+    - V24
+    - V25
+    - V26
+    - V27
+    - V28
+
+  original_features:
+    - Time
+    - Amount
+
+  engineered_features:
+    - hour_of_day
+    - time_since_last
+    - amount_log
+
+  target: Class
+
+  feature_ranges:
+    Time:
+      min: 0
+      max: 200000
+    Amount:
+      min: 0
+      max: 30000
+    V1:
+      min: -60
+      max: 10
+    V2:
+      min: -80
+      max: 80
+
+transformations:
+  temporal:
+    hour_of_day: "Time % 86400 / 3600"
+    time_since_last: "diff(Time)"
+  amount:
+    amount_log: "log1p(Amount)"
+  scaling:
+    method: StandardScaler
+    columns: all_numeric
