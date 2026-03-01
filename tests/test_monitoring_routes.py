@@ -90,3 +90,38 @@ class TestMonitoringRoutes:
         assert resp.status_code == 200
         body = resp.json()
         assert "windows" in body
+
+    def test_retrain_status_endpoint(self, monitoring_client):
+        """GET /monitoring/retrain/status returns retrain state."""
+        resp = monitoring_client.get("/monitoring/retrain/status")
+        assert resp.status_code == 200
+        body = resp.json()
+        assert "consecutive_drift_count" in body
+        assert "consecutive_failures" in body
+        assert "auto_trigger_disabled" in body
+
+    def test_rollback_status_endpoint(self, monitoring_client):
+        """GET /monitoring/rollback/status returns rollback monitor state."""
+        resp = monitoring_client.get("/monitoring/rollback/status")
+        assert resp.status_code == 200
+        body = resp.json()
+        assert "is_active" in body
+        assert "window_seconds" in body
+
+    def test_retrain_status_reflects_state(self, monitoring_client):
+        """Retrain status should reflect module-level state changes."""
+        from src.services.retrain_service import reset_state
+        reset_state()
+        resp = monitoring_client.get("/monitoring/retrain/status")
+        body = resp.json()
+        assert body["consecutive_drift_count"] == 0
+        assert body["consecutive_failures"] == 0
+        assert body["auto_trigger_disabled"] is False
+
+    def test_rollback_status_inactive(self, monitoring_client):
+        """Rollback status should show inactive when no monitoring started."""
+        from src.services.rollback_monitor import rollback_monitor
+        rollback_monitor.stop_monitoring()
+        resp = monitoring_client.get("/monitoring/rollback/status")
+        body = resp.json()
+        assert body["is_active"] is False

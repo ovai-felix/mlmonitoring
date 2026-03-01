@@ -1,0 +1,227 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: ML Monitoring Alerts
+    folder: ML Monitoring
+    interval: 60s
+    rules:
+      - uid: service-down
+        title: ServiceDown
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: up{job="model-server"} == 0
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+        for: 30s
+        labels:
+          severity: critical
+          channel: slack_email
+        annotations:
+          summary: Model server is down
+          description: "The model-server target has been unreachable for 30 seconds."
+
+      - uid: error-rate-spike
+        title: ErrorRateSpike
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: rate(http_requests_total{status_code=~"5.."}[2m]) / rate(http_requests_total[2m]) > 0.05
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+        for: 2m
+        labels:
+          severity: critical
+          channel: slack_email
+        annotations:
+          summary: High error rate detected
+          description: "5xx error rate exceeds 5% over the last 2 minutes."
+
+      - uid: high-latency
+        title: HighLatency
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m])) > 1
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+        for: 5m
+        labels:
+          severity: warning
+          channel: slack
+        annotations:
+          summary: High p99 latency
+          description: "p99 request latency exceeds 1 second over the last 5 minutes."
+
+      - uid: accuracy-drop
+        title: AccuracyDrop
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: rolling_accuracy{window_size="1000"} < 0.85
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+        for: 5m
+        labels:
+          severity: critical
+          channel: slack_email
+        annotations:
+          summary: Model accuracy has dropped
+          description: "Rolling accuracy (window=1000) is below 0.85 for 5 minutes."
+
+      - uid: data-drift-detected
+        title: DataDriftDetected
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 900
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: drift_detected > 0
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+        for: 10m
+        labels:
+          severity: warning
+          channel: slack
+        annotations:
+          summary: Data drift detected
+          description: "Drift has been detected for more than 10 minutes."
+
+      - uid: prediction-drift
+        title: PredictionDrift
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 900
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: abs(prediction_drift_fraud_rate - 0.0017) / 0.0017 > 0.2
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+        for: 10m
+        labels:
+          severity: warning
+          channel: slack
+        annotations:
+          summary: Prediction distribution drift
+          description: "Fraud rate has drifted >20% from baseline (0.17%)."
+
+      - uid: high-anomaly-rate
+        title: HighAnomalyRate
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 7200
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: rate(anomalies_detected_total[1h]) / rate(predictions_total[1h]) > 0.1
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+        for: 1h
+        labels:
+          severity: warning
+          channel: slack
+        annotations:
+          summary: High anomaly detection rate
+          description: "More than 10% of predictions flagged as anomalies in the last hour."
+
+      - uid: data-quality-failure
+        title: DataQualityFailure
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: max(data_quality_null_rate) > 0.05
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+        for: 5m
+        labels:
+          severity: warning
+          channel: slack
+        annotations:
+          summary: Data quality issue
+          description: "Null rate exceeds 5% for at least one feature."
+
+      - uid: stale-model
+        title: StaleModel
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 7200
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: (time() - model_swap_timestamp) > 604800 and drift_detected > 0
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+        for: 1h
+        labels:
+          severity: warning
+          channel: email
+        annotations:
+          summary: Stale model with active drift
+          description: "Model has not been updated in 7+ days while drift is detected."
+
+      - uid: retrain-failed
+        title: RetrainFailed
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: consecutive_retrain_failures >= 3
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+        for: 0s
+        labels:
+          severity: critical
+          channel: slack_email
+        annotations:
+          summary: Consecutive retrain failures
+          description: "3 or more consecutive retrain attempts have failed. Auto-retraining is disabled."

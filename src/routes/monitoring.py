@@ -7,6 +7,8 @@ from fastapi import APIRouter
 from src.config import settings
 from src.services.drift_service import run_drift_detection
 from src.services.performance_metrics import compute_rolling_metrics
+from src.services.retrain_service import get_state as get_retrain_state
+from src.services.rollback_monitor import rollback_monitor
 
 logger = logging.getLogger(__name__)
 
@@ -40,3 +42,15 @@ async def performance():
     """Return current rolling performance metrics."""
     result = compute_rolling_metrics()
     return result
+
+
+@router.get("/retrain/status")
+async def retrain_status():
+    """Return current retrain service state."""
+    return get_retrain_state()
+
+
+@router.get("/rollback/status")
+async def rollback_status():
+    """Return current rollback monitor state."""
+    return rollback_monitor.get_state()

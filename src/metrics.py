@@ -244,3 +244,37 @@ false_positive_rate = Gauge(
     "False positive rate",
     ["window_size"],
 )
+
+# Phase 5: Retraining and rollback metrics
+retrain_triggered_total = Counter(
+    "retrain_triggered_total",
+    "Total retrain triggers by reason",
+    ["reason"],
+)
+
+retrain_outcome_total = Counter(
+    "retrain_outcome_total",
+    "Total retrain outcomes",
+    ["outcome"],
+)
+
+consecutive_retrain_failures = Gauge(
+    "consecutive_retrain_failures",
+    "Consecutive retrain failure streak",
+)
+
+model_swap_total = Counter(
+    "model_swap_total",
+    "Total model swap actions",
+    ["action"],
+)
+
+model_swap_timestamp = Gauge(
+    "model_swap_timestamp",
+    "Epoch time of last model swap",
+)
+
+post_swap_monitoring_active = Gauge(
+    "post_swap_monitoring_active",
+    "Whether post-swap monitoring is active (1=yes, 0=no)",
+)

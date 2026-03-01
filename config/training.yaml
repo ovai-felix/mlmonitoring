@@ -74,3 +74,24 @@ monitoring:
     drift_psi_critical: 0.25
     accuracy_min: 0.9
     f1_min: 0.5
+
+alerting:
+  slack_webhook_url: ""
+  smtp_host: ""
+  smtp_port: 587
+  smtp_user: ""
+  smtp_pass: ""
+  alert_email_to: ""
+  severity_routing:
+    critical: [slack, email]
+    warning: [slack]
+    info: [log]
+
+retraining:
+  consecutive_drift_required: 2
+  accuracy_drop_threshold: 0.05
+  stale_model_days: 7
+  auto_rollback:
+    window_seconds: 1800
+    accuracy_drop: 0.03
+    latency_p99: 2.0

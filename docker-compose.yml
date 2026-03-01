@@ -54,6 +54,12 @@ services:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SMTP_ENABLED=${GF_SMTP_ENABLED:-false}
+      - GF_SMTP_HOST=${SMTP_HOST:-}
+      - GF_SMTP_USER=${SMTP_USER:-}
+      - GF_SMTP_PASSWORD=${SMTP_PASS:-}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}
+      - ALERT_EMAIL_TO=${ALERT_EMAIL_TO:-}
     volumes:
       - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
       - ./config/grafana/dashboards:/var/lib/grafana/dashboards:ro

@@ -4,6 +4,7 @@ from fastapi import APIRouter, BackgroundTasks, HTTPException
 from pydantic import BaseModel, Field
 from typing import Optional
 
+from src.metrics import retrain_triggered_total
 from src.services.training_service import (
     check_cooldown,
     train_anomaly,
@@ -19,6 +20,7 @@ class TrainingRequest(BaseModel):
     data_version: str
     n_trials: int = Field(default=5, ge=1, le=20)
     window_size: int = Field(default=32, ge=8, le=96)
+    reason: str = Field(default="manual", pattern="^(drift|accuracy_drop|manual)$")
 
 
 class TrainingResponse(BaseModel):
@@ -41,6 +43,8 @@ async def trigger_training(request: TrainingRequest, background_tasks: Backgroun
             status="rejected",
             message=f"Training cooldown active for {request.model_type}. Try again later.",
         )
+
+    retrain_triggered_total.labels(reason=request.reason).inc()
 
     if request.model_type == "classification":
         background_tasks.add_task(train_classifier, request.data_version, request.n_trials)

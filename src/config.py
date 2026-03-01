@@ -28,6 +28,24 @@ class Settings(BaseSettings):
     drift_n_recent: int = 5000
     performance_update_seconds: int = 60
 
+    # Retraining settings
+    retrain_consecutive_drift_required: int = 2
+    retrain_accuracy_drop_threshold: float = 0.05
+    stale_model_days: int = 7
+
+    # Auto-rollback settings
+    auto_rollback_window_seconds: int = 1800
+    auto_rollback_accuracy_drop: float = 0.03
+    auto_rollback_latency_p99: float = 2.0
+
+    # Alerting settings
+    slack_webhook_url: str = ""
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_pass: str = ""
+    alert_email_to: str = ""
+
     model_config = {"env_prefix": "MLMON_"}
 
 

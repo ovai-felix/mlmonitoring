@@ -9,7 +9,13 @@ import torch
 import numpy as np
 
 from src.config import settings
-from src.metrics import model_reload_total, active_model_version, model_load_duration_seconds
+from src.metrics import (
+    model_reload_total,
+    active_model_version,
+    model_load_duration_seconds,
+    model_swap_total,
+    model_swap_timestamp,
+)
 from src.models.classifier import TabularTransformer
 from src.models.lstm_model import FraudLSTM
 from src.models.anomaly import AnomalyDetector
@@ -163,6 +169,8 @@ class ModelManager:
             self._active_color = "green" if old_color == "blue" else "blue"
             self._update_version_gauge()
             model_reload_total.labels(status="success").inc()
+            model_swap_total.labels(action="swap").inc()
+            model_swap_timestamp.set(time.time())
             logger.info("Reload complete: %s → %s", old_color, self._active_color)
             return {"status": "ok", "active_color": self._active_color}
         except Exception as e:
@@ -173,7 +181,7 @@ class ModelManager:
             with self._lock:
                 self._reload_in_progress = False
 
-    def rollback(self) -> dict:
+    def rollback(self, reason: str = "manual") -> dict:
         standby = self.standby
         if not standby.is_ready:
             return {"status": "error", "detail": "Standby slot is not ready"}
@@ -181,7 +189,10 @@ class ModelManager:
         old_color = self._active_color
         self._active_color = "green" if old_color == "blue" else "blue"
         self._update_version_gauge()
-        logger.info("Rollback: %s → %s", old_color, self._active_color)
+        action = "auto_rollback" if reason != "manual" else "rollback"
+        model_swap_total.labels(action=action).inc()
+        model_swap_timestamp.set(time.time())
+        logger.info("Rollback (%s): %s → %s", reason, old_color, self._active_color)
         return {"status": "ok", "active_color": self._active_color}
 
     def get_info(self) -> dict:
